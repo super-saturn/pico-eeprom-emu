@@ -8,7 +8,10 @@ An Embedded Rust based solution to turn a Raspi Pico into an "EEPROM"-like devic
 
 Takes any binary file as the ROM contents.
 
-This was developed as part of a larger project to emulate a 6502 on a Raspi Pico. I don't own either a 6502 or a convenient EEPROM.
+This was developed as part of a larger project to emulate a 6502 on a Raspi Pico. I don't own either a 6502 or a convenient EEPROM. Here they are working together, (mostly) passing the Klaus25m 6502 Functional Test Suite.
+![pico-eeprom-emu](https://user-images.githubusercontent.com/127321359/226114714-88d45b2d-086f-4fc7-95b3-566d89027b5a.jpeg)
+
+In the course of development of that project, this EEPROM software/hardware solution has undergone many hundreds of millions of access cycles and proven to be very robust.
 
 ## Getting Started
 
