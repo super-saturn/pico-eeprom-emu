@@ -93,19 +93,20 @@ fn main() -> ! {
     gpio_magician.gpio_set_dir_out_masked(data_bus_pinmask);
 
     let mut memory:[u8; 1 << ADDR_BUS_BITS] = [0; 1 << ADDR_BUS_BITS];
-    let memory_file = *include_bytes!("../blankrom.bin");
+    let memory_file = *include_bytes!("../user_ROMS/6502_functional_test_truncated.bin");
 
     memory[..memory_file.len()].copy_from_slice(&memory_file[..]);
+
+    const CS_PIN_MASK:u32 = 1 << CS_PIN;
+    let data_and_led_pinmask = data_bus_pinmask | (1 << LED_PIN); 
     
     loop {
-        let cs = gpio_magician.gpio_get(CS_PIN);
+        let cs = gpio_magician.gpio_get_masked(CS_PIN_MASK);
 
-        if cs { // chip select for ROM
-            gpio_magician.gpio_set_dir_out_masked(data_bus_pinmask);
-            gpio_magician.gpio_set(LED_PIN);
+        if cs > 0 { // chip select for ROM
+            gpio_magician.gpio_set_dir_out_masked(data_and_led_pinmask);
         } else {
-            gpio_magician.gpio_set_out_disabled_masked(data_bus_pinmask);
-            gpio_magician.gpio_clr(LED_PIN);
+            gpio_magician.gpio_set_out_disabled_masked(data_and_led_pinmask);
         }
 
         let addr_in = gpio_magician.gpio_get_masked(address_bus_pinmask);
