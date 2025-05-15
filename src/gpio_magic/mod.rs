@@ -6,8 +6,10 @@
 //
 // Other content Copyright (c) 2023 JP Stringham (see MIT-LICENSE)
 
+use rp2040_hal::{self as hal};
+
+use hal::pac;
 use pac::{SIO, PADS_BANK0, IO_BANK0};
-use rp2040_pac as pac;
 
 pub struct GPIOMagic {
     sio:SIO,
@@ -28,18 +30,18 @@ impl GPIOMagic {
     #[inline]
     pub fn gpio_clr(&mut self, pin:u32,) {
         let mask:u32 = 1<<pin;
-        self.sio.gpio_out_clr.write(|w| unsafe { w.bits(mask) });
+        self.sio.gpio_out_clr().write(|w| unsafe { w.bits(mask) });
     }
 
     #[inline]
     pub fn gpio_set(&mut self, pin:u32) {
         let mask:u32 = 1<<pin;
-        self.sio.gpio_out_set.write(|w| unsafe { w.bits(mask) });
+        self.sio.gpio_out_set().write(|w| unsafe { w.bits(mask) });
     }
 
     pub fn gpio_init(&mut self, pin:u32) {
         
-        self.pads_bank0.gpio[pin as usize].write(|w| {
+        self.pads_bank0.gpio(pin as usize).write(|w| {
             w
             .pue().clear_bit()
             .pde().clear_bit()
@@ -48,16 +50,16 @@ impl GPIOMagic {
             .slewfast().set_bit()
         });
 
-        self.io_bank0.gpio[pin as usize].gpio_ctrl.write(|w| {
+        self.io_bank0.gpio(pin as usize).gpio_ctrl().write(|w| {
             w
             .funcsel().sio()
         });
-        self.sio.gpio_oe_clr.write(|w| unsafe { w.bits(1<<pin)});
-        self.sio.gpio_out_clr.write(|w| unsafe { w.bits(1<<pin)});
+        self.sio.gpio_oe_clr().write(|w| unsafe { w.bits(1<<pin)});
+        self.sio.gpio_out_clr().write(|w| unsafe { w.bits(1<<pin)});
     }
 
     pub fn gpio_set_pio0func(&mut self, pin:u32) {
-        self.io_bank0.gpio[pin as usize].gpio_ctrl.write(|w| unsafe {
+        self.io_bank0.gpio(pin as usize).gpio_ctrl().write(|w| unsafe {
             w
             .bits(0)
             .funcsel().pio0()
@@ -65,29 +67,29 @@ impl GPIOMagic {
     }
 
     pub fn gpio_put_masked(&mut self, mask:u32, value:u32) {
-        let result = self.sio.gpio_out.read().gpio_out().bits();
+        let result = self.sio.gpio_out().read().gpio_out().bits();
 
-        self.sio.gpio_out_xor.write(|w| unsafe { w.bits((result ^ value) & mask)});
+        self.sio.gpio_out_xor().write(|w| unsafe { w.bits((result ^ value) & mask)});
     }
 
     pub fn gpio_set_dir_out_masked(&mut self, mask:u32) {
-        self.sio.gpio_oe_set.write(|w| unsafe { w.bits(mask)});
+        self.sio.gpio_oe_set().write(|w| unsafe { w.bits(mask)});
     }
 
     pub fn gpio_set_out_disabled_masked(&mut self, mask:u32) {
-        self.sio.gpio_oe_clr.write(|w| unsafe { w.bits(mask) });
+        self.sio.gpio_oe_clr().write(|w| unsafe { w.bits(mask) });
     }
 
     pub fn gpio_get(&mut self, pin:u32) -> bool {
-        self.sio.gpio_in.read().bits() & (1 << pin) > 0
+        self.sio.gpio_in().read().bits() & (1 << pin) > 0
     }
 
     pub fn gpio_get_masked(&mut self, mask:u32) -> u32 {
-        self.sio.gpio_in.read().bits() & mask
+        self.sio.gpio_in().read().bits() & mask
     }
 
     pub fn gpio_enable_pulldown(&mut self, pin:u32) {
-        self.pads_bank0.gpio[pin as usize].modify(|_, w| {
+        self.pads_bank0.gpio(pin as usize).modify(|_, w| {
             w.pde().set_bit()
         });
     }
