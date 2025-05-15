@@ -36,7 +36,7 @@ pub static BOOT_LOADER: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 // DEAR READER: USE THIS SECTION TO CONFIGURE
 const LED_PIN:u32 = 25;
 const ADDR_BUS_START_PIN:u32 = 2;
-const ADDR_BUS_BITS:u32 = 8;
+const ADDR_BUS_BITS:u32 = 13;
 const DATA_BUS_START_PIN:u32 = 15;
 
 // nb. your ROM file can't be bigger than this or you wouldn't be able to access all of it.
@@ -135,10 +135,8 @@ fn main() -> ! {
     println!("data bus pinmask: {=u32:#034b}", data_bus_pinmask);
 
     // // NB. if you provide a memory_file that's bigger than 1 << ADDR_BUS_BITS you can't access all of it
-    let memory:[u8; MEM_SIZE] = [0x42u8; MEM_SIZE];
-    // // let memory_file = [0x42u8; MEM_SIZE];
-
-    // // memory[..memory_file.len()].copy_from_slice(&memory_file[..]);
+    let mut memory:[u8; MEM_SIZE] = [0u8; MEM_SIZE];
+    copy_rom(&mut memory);
 
     const CS_PIN_MASK:u32 = 1 << CS_PIN;
     let data_and_led_pinmask = data_bus_pinmask;// | (1 << LED_PIN);
@@ -147,6 +145,7 @@ fn main() -> ! {
     let mut ticks:u32 = 0;
 
     gpio_magician.gpio_set(LED_PIN);
+    gpio_magician.gpio_init(CS_PIN);
     
     loop {
         let cs = gpio_magician.gpio_get_masked(CS_PIN_MASK);
@@ -168,10 +167,22 @@ fn main() -> ! {
             ticks = ticks + 1;
 
             if ticks % 10_000_000 == 0 {
-                println!("\n~~~~~~~~~\nts: {}\nAddr: {:#x}\nROM {:#x}\nPins: {=u32:#034b}", ticks, addr_in, memory[addr_in] as u32, pinmask_out);
+                println!("\n~~~~~~~~~\nts: {}\nAddr: {:#06x}\nROM {:#x}\nPins: {=u32:#034b}\ncs: {}", ticks, addr_in, memory[addr_in] as u32, pinmask_out, cs > 0);
             }
         }
     }
+}
+
+fn copy_rom(memory:&mut [u8]) {
+    let memory_file = *include_bytes!("../blankrom.bin");
+
+    let mem_size = if memory_file.len() > MEM_SIZE {
+        MEM_SIZE
+    } else {
+        memory_file.len()
+    };
+
+    memory[..mem_size].copy_from_slice(&memory_file[..mem_size]);
 }
 
 // There's some magic initialization sauce in the rp2040 hal Pins::new()

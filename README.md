@@ -4,7 +4,7 @@ An Embedded Rust based solution to turn a Raspi Pico into an "EEPROM"-like devic
 
 ## Description
 
-15-bit Addressable (32kB) input, 8-bit (1byte) output per address. 1 bit Chip Select input.
+13-bit Addressable (8kB) input, 8-bit (1byte) output per address. 1 bit Chip Select input. Reconfigurable up to 15-bit if `probe-rs` is not used, see below.
 
 Takes any binary file as the ROM contents.
 
@@ -21,7 +21,7 @@ Simply swap out the "blankrom.bin" with your preferred binary, and run:
 
 `cargo run --release`
 
-Connect pins 0-14 to your address bus, pins 15-22 to your data bus, and pin 26 to a CS / Bus Select signal (in many systems, this can simply be the highest bit of your address bus.)
+Connect pins 2-14 inclusive to your address bus, pins 15-22 to your data bus, and pin 26 to a CS / Bus Select signal (in many systems, this can simply be the highest bit of your address bus.)
 
 You must install support for the `thumbv6m-none-eabi` target (see the RP2040 HAL project for more details.)
 You must also install `flip-link` and `elf2uf2-rs`.
