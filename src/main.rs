@@ -24,7 +24,7 @@ use rp2040_hal::{self as hal, fugit::RateExtU32, pll::{common_configs::PLL_USB_4
 use hal::pac as pac;
 
 use defmt_rtt as _;
-use rp2040_panic_usb_boot as _;
+use panic_probe as _;
 
 pub mod gpio_magic;
 
@@ -35,8 +35,8 @@ pub static BOOT_LOADER: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 
 // DEAR READER: USE THIS SECTION TO CONFIGURE
 const LED_PIN:u32 = 25;
-const ADDR_BUS_START_PIN:u32 = 2;
-const ADDR_BUS_BITS:u32 = 13;
+const ADDR_BUS_START_PIN:u32 = 0;
+const ADDR_BUS_BITS:u32 = 15;
 const DATA_BUS_START_PIN:u32 = 15;
 
 // nb. your ROM file can't be bigger than this or you wouldn't be able to access all of it.
@@ -47,6 +47,9 @@ const MEM_SIZE:usize = 1 << ADDR_BUS_BITS;
 const CS_PIN:u32 = 26;
 
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
+
+#[cfg(feature = "logging")]
+const TICKS_PER_LOG:u32 = 100_000;
 
 #[rp2040_hal::entry]
 fn main() -> ! {
@@ -127,7 +130,7 @@ fn main() -> ! {
     let address_bus_pinmask = generate_bus_pinmask(ADDR_BUS_START_PIN, ADDR_BUS_BITS);
     let data_bus_pinmask = generate_bus_pinmask(DATA_BUS_START_PIN, 8); // 8bit output (1byte)
 
-    assert_eq!(address_bus_pinmask & data_bus_pinmask, 0);
+    assert_eq!(address_bus_pinmask & data_bus_pinmask, 0, "Conflicting pins with Address and Data Bus.");
 
     gpio_magician.gpio_set_dir_out_masked(data_bus_pinmask);
 
@@ -142,8 +145,10 @@ fn main() -> ! {
     let data_and_led_pinmask = data_bus_pinmask;// | (1 << LED_PIN);
 
     println!("Setup complete");
+    #[cfg(feature = "logging")]
     let mut ticks:u32 = 0;
 
+    // light up the LED to show we're alive.
     gpio_magician.gpio_set(LED_PIN);
     gpio_magician.gpio_init(CS_PIN);
     
@@ -166,8 +171,13 @@ fn main() -> ! {
         #[cfg(feature = "logging")] {
             ticks = ticks + 1;
 
-            if ticks % 10_000_000 == 0 {
-                println!("\n~~~~~~~~~\nts: {}\nAddr: {:#06x}\nROM {:#x}\nPins: {=u32:#034b}\ncs: {}", ticks, addr_in, memory[addr_in] as u32, pinmask_out, cs > 0);
+            if ticks % TICKS_PER_LOG == 0 {
+                let pin_vals = match cs > 0 {
+                    true => pinmask_out,
+                    false => gpio_magician.gpio_get_masked(data_and_led_pinmask) >> DATA_BUS_START_PIN
+                };
+
+                println!("\n~~~~~~~~~\nts: {}\nAddr: {:#06x}\nROM {:#x}\nPins: {:#x}\ncs: {}", ticks / TICKS_PER_LOG, addr_in, memory[addr_in] as u32, pin_vals, cs > 0);
             }
         }
     }

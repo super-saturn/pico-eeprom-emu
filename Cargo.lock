@@ -311,6 +311,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "panic-probe"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd402d00b0fb94c5aee000029204a46884b1262e0c443f166d86d2c0747e1a1a"
+dependencies = [
+ "cortex-m",
+ "rtt-target",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -318,16 +328,16 @@ checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 
 [[package]]
 name = "pico_eeprom_emu"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
  "embedded-hal 1.0.0",
+ "panic-probe",
  "rp2040-boot2",
  "rp2040-hal",
- "rp2040-panic-usb-boot",
 ]
 
 [[package]]
@@ -472,12 +482,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "rp2040-panic-usb-boot"
-version = "0.6.0"
+name = "rtt-target"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01ea03783e5d4bfa7ae0504dea4e5aa7d03d18e1694241de3e102adf8966c355"
+checksum = "10b34c9e6832388e45f3c01f1bb60a016384a0a4ad80cdd7d34913bed25037f0"
 dependencies = [
- "cortex-m",
+ "critical-section",
+ "ufmt-write",
 ]
 
 [[package]]
@@ -551,6 +562,12 @@ dependencies = [
  "quote",
  "syn 2.0.101",
 ]
+
+[[package]]
+name = "ufmt-write"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e87a2ed6b42ec5e28cc3b94c09982969e9227600b2e3dcbc1db927a84c06bd69"
 
 [[package]]
 name = "unicode-ident"
