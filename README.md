@@ -4,7 +4,7 @@ An Embedded Rust based solution to turn a Raspi Pico into an "EEPROM"-like devic
 
 ## Description
 
-15-bit Addressable (8kB) input, 8-bit (1byte) output per address. 1 bit Chip Select input.
+15-bit Addressable (32kB) input, 8-bit (1byte) output per address. 1 bit Chip Select input.
 
 Takes any binary file as the ROM contents.
 
